@@ -43,159 +43,163 @@ struct SettingsView: View {
             Divider()
             footerSection
         }
-        .frame(width: 560, height: 600)
+        .frame(width: 580, height: 620)
         .background(Color(NSColor.windowBackgroundColor))
         .onAppear {
             loadSettings()
         }
     }
 
-    //  Header
+    // MARK: - Header
 
     private var headerSection: some View {
         HStack(spacing: 12) {
             Image(systemName: "gearshape.fill")
-                .font(.title2)
-                .foregroundColor(.blue)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(Color(hex: "0066FF"))
 
             Text("Settings")
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.system(size: 20, weight: .semibold))
 
             Spacer()
 
             Button(action: { dismiss() }) {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.title3)
+                    .font(.system(size: 20))
                     .foregroundColor(.secondary)
             }
             .buttonStyle(.plain)
         }
-        .padding()
+        .padding(20)
         .background(Color(NSColor.controlBackgroundColor))
     }
 
-    //  Destination Section
+    // MARK: - Destination Section
 
     private var destinationSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Section Header
             HStack(spacing: 8) {
                 Image(systemName: "externaldrive.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(Color(hex: "0066FF"))
+                    .font(.system(size: 14, weight: .medium))
                 Text("Backup Destination")
-                    .font(.headline)
+                    .font(.system(size: 15, weight: .semibold))
             }
 
             // Destination Card
             VStack(spacing: 16) {
                 if destinationPath.isEmpty {
                     // Empty State
-                    VStack(spacing: 12) {
+                    VStack(spacing: 14) {
                         Image(systemName: "folder.badge.questionmark")
-                            .font(.system(size: 48))
+                            .font(.system(size: 44, weight: .light))
                             .foregroundColor(.secondary)
 
                         Text("No destination selected")
-                            .font(.subheadline)
+                            .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.secondary)
 
                         Text("Choose a folder on your external drive to store your photo backups")
-                            .font(.caption)
+                            .font(.system(size: 12))
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 30)
+                    .padding(.vertical, 28)
                 } else {
                     // Selected Path
                     HStack(spacing: 12) {
-                        Image(systemName: "externaldrive.fill.badge.checkmark")
-                            .font(.title2)
-                            .foregroundColor(.green)
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color(hex: "34C759").opacity(0.12))
+                                .frame(width: 40, height: 40)
+
+                            Image(systemName: "externaldrive.fill.badge.checkmark")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(Color(hex: "34C759"))
+                        }
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Current Destination")
-                                .font(.caption)
+                                .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(.secondary)
 
                             Text(destinationPath)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
+                                .font(.system(size: 13, weight: .medium))
                                 .lineLimit(2)
                                 .truncationMode(.middle)
                         }
 
                         Spacer()
                     }
-                    .padding()
-                    .background(Color.green.opacity(0.05))
-                    .cornerRadius(10)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.green.opacity(0.2), lineWidth: 1)
-                    )
+                    .padding(14)
+                    .background(Color(hex: "34C759").opacity(0.06))
+                    .cornerRadius(6)
                 }
 
                 // Choose Folder Button
                 Button(action: { selectFolder() }) {
                     HStack(spacing: 8) {
                         Image(systemName: "folder.badge.plus")
+                            .font(.system(size: 14, weight: .medium))
                         Text(destinationPath.isEmpty ? "Choose Destination Folder" : "Change Destination")
+                            .font(.system(size: 14, weight: .semibold))
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .frame(height: 44)
+                    .background(Color(hex: "0066FF"))
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.blue)
-                .controlSize(.large)
+                .buttonStyle(.plain)
             }
-            .padding()
+            .padding(16)
             .background(Color(NSColor.controlBackgroundColor))
-            .cornerRadius(12)
+            .cornerRadius(8)
         }
     }
 
-    //  Permissions Section
+    // MARK: - Permissions Section
 
     private var permissionsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Section Header
             HStack(spacing: 8) {
                 Image(systemName: "lock.shield.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(Color(hex: "0066FF"))
+                    .font(.system(size: 14, weight: .medium))
                 Text("Permissions")
-                    .font(.headline)
+                    .font(.system(size: 15, weight: .semibold))
             }
 
             // Permission Card
             VStack(spacing: 0) {
-                HStack(spacing: 12) {
+                HStack(spacing: 14) {
                     // Icon
                     ZStack {
-                        Circle()
-                            .fill(permissionService.isAuthorized ? Color.green.opacity(0.15) : Color.orange.opacity(0.15))
-                            .frame(width: 48, height: 48)
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(permissionService.isAuthorized ? Color(hex: "34C759").opacity(0.12) : Color(hex: "FF9500").opacity(0.12))
+                            .frame(width: 44, height: 44)
 
                         Image(systemName: permissionService.isAuthorized ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                            .font(.title2)
-                            .foregroundColor(permissionService.isAuthorized ? .green : .orange)
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(permissionService.isAuthorized ? Color(hex: "34C759") : Color(hex: "FF9500"))
                     }
 
                     // Info
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Photos Library Access")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
+                            .font(.system(size: 14, weight: .semibold))
 
                         HStack(spacing: 6) {
                             Circle()
-                                .fill(permissionService.isAuthorized ? Color.green : Color.orange)
-                                .frame(width: 8, height: 8)
+                                .fill(permissionService.isAuthorized ? Color(hex: "34C759") : Color(hex: "FF9500"))
+                                .frame(width: 6, height: 6)
 
                             Text(permissionStatusText)
-                                .font(.caption)
+                                .font(.system(size: 12))
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -209,75 +213,82 @@ struct SettingsView: View {
                         }) {
                             HStack(spacing: 6) {
                                 Image(systemName: "gearshape")
+                                    .font(.system(size: 13, weight: .medium))
                                 Text("Open Settings")
+                                    .font(.system(size: 13, weight: .medium))
                             }
-                            .padding(.horizontal, 16)
+                            .padding(.horizontal, 14)
                             .padding(.vertical, 8)
+                            .background(Color(hex: "FF9500"))
+                            .foregroundColor(.white)
+                            .cornerRadius(6)
                         }
-                        .buttonStyle(.bordered)
-                        .tint(.orange)
+                        .buttonStyle(.plain)
                     }
                 }
-                .padding()
-                .background(Color(NSColor.controlBackgroundColor))
-                .cornerRadius(12)
+                .padding(16)
 
                 // Help Text
                 if !permissionService.isAuthorized {
-                    Text("CloudToDisk needs access to your Photos library to backup your iCloud photos. Please grant permission in System Settings > Privacy & Security > Photos.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding()
-                        .background(Color.orange.opacity(0.05))
+                    VStack(alignment: .leading, spacing: 0) {
+                        Divider()
+
+                        Text("CloudToDisk needs access to your Photos library to backup your iCloud photos. Please grant permission in System Settings > Privacy & Security > Photos.")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                            .padding(16)
+                            .background(Color(hex: "FF9500").opacity(0.04))
+                    }
                 }
             }
             .background(Color(NSColor.controlBackgroundColor))
-            .cornerRadius(12)
+            .cornerRadius(8)
         }
     }
 
-    //  About Section
+    // MARK: - About Section
 
     private var aboutSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Section Header
             HStack(spacing: 8) {
                 Image(systemName: "info.circle.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(Color(hex: "0066FF"))
+                    .font(.system(size: 14, weight: .medium))
                 Text("About CloudToDisk")
-                    .font(.headline)
+                    .font(.system(size: 15, weight: .semibold))
             }
 
             VStack(spacing: 16) {
                 // Description
                 Text("CloudToDisk automatically backs up your iCloud Photos to external storage with intelligent organization and duplicate detection.")
-                    .font(.subheadline)
+                    .font(.system(size: 13))
                     .foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Divider()
 
                 // Features
-                VStack(spacing: 12) {
+                VStack(spacing: 14) {
                     FeatureRow(icon: "calendar", title: "Date-Based Organization", description: "Photos organized in YYYY/MM folders")
                     FeatureRow(icon: "arrow.triangle.2.circlepath", title: "Resumable Backups", description: "Continues where it left off if interrupted")
                     FeatureRow(icon: "doc.on.doc", title: "Duplicate Detection", description: "Never backs up the same photo twice")
                     FeatureRow(icon: "livephoto", title: "Live Photos Support", description: "Preserves both image and video components")
                 }
             }
-            .padding()
+            .padding(16)
             .background(Color(NSColor.controlBackgroundColor))
-            .cornerRadius(12)
+            .cornerRadius(8)
         }
     }
 
-    //  Footer
+    // MARK: - Footer
 
     private var footerSection: some View {
         HStack {
             // Version
             Text("Version 1.0")
-                .font(.caption)
+                .font(.system(size: 12))
                 .foregroundColor(.secondary)
 
             Spacer()
@@ -285,21 +296,21 @@ struct SettingsView: View {
             // Made with love
             HStack(spacing: 4) {
                 Text("Made with")
-                    .font(.caption)
+                    .font(.system(size: 12))
                     .foregroundColor(.secondary)
                 Image(systemName: "heart.fill")
-                    .font(.caption)
+                    .font(.system(size: 10))
                     .foregroundColor(.red)
                 Text("for macOS")
-                    .font(.caption)
+                    .font(.system(size: 12))
                     .foregroundColor(.secondary)
             }
         }
-        .padding()
+        .padding(20)
         .background(Color(NSColor.controlBackgroundColor))
     }
 
-    //  Helpers
+    // MARK: - Helpers
 
     private var permissionStatusText: String {
         switch permissionService.authorizationStatus {
@@ -339,7 +350,7 @@ struct SettingsView: View {
     }
 }
 
-//  Feature Row Component
+// MARK: - Feature Row Component
 
 struct FeatureRow: View {
     let icon: String
@@ -349,17 +360,16 @@ struct FeatureRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.title3)
-                .foregroundColor(.blue)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(Color(hex: "0066FF"))
                 .frame(width: 24)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                    .font(.system(size: 13, weight: .semibold))
 
                 Text(description)
-                    .font(.caption)
+                    .font(.system(size: 12))
                     .foregroundColor(.secondary)
             }
 
