@@ -225,6 +225,64 @@ struct StatusView: View {
             .background(Color(NSColor.controlBackgroundColor))
             .cornerRadius(8)
 
+            // iCloud Download Progress Card
+            if coordinator.currentProgress.isDownloadingFromiCloud {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "icloud.and.arrow.down")
+                            .foregroundColor(Color(hex: "0066FF"))
+                            .font(.system(size: 13))
+
+                        Text("Downloading from iCloud")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.secondary)
+
+                        Spacer()
+
+                        if coordinator.currentProgress.currentDownloadAttempt > 1 {
+                            Text("Attempt \(coordinator.currentProgress.currentDownloadAttempt)")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(Color(hex: "FF9500"))
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Color(hex: "FF9500").opacity(0.12))
+                                .cornerRadius(4)
+                        }
+
+                        Text("\(Int(coordinator.currentProgress.iCloudDownloadProgress * 100))%")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(Color(hex: "0066FF"))
+                    }
+
+                    // Download progress bar
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            // Background
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(Color(hex: "0066FF").opacity(0.12))
+                                .frame(height: 4)
+
+                            // Progress
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(Color(hex: "0066FF"))
+                                .frame(
+                                    width: geometry.size.width * coordinator.currentProgress.iCloudDownloadProgress,
+                                    height: 4
+                                )
+                                .animation(.linear(duration: 0.2), value: coordinator.currentProgress.iCloudDownloadProgress)
+                        }
+                    }
+                    .frame(height: 4)
+                }
+                .padding(12)
+                .background(Color(hex: "0066FF").opacity(0.04))
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color(hex: "0066FF").opacity(0.2), lineWidth: 1)
+                )
+            }
+
             // Current File Card
             if !coordinator.currentFile.isEmpty {
                 HStack(spacing: 8) {

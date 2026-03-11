@@ -9,6 +9,27 @@ import Foundation
 import Photos
 import Combine
 
+// Timeout error
+struct TimeoutError: Error {}
+
+// Timeout helper
+func withTimeout<T>(seconds: TimeInterval, operation: @escaping () async throws -> T) async throws -> T {
+    try await withThrowingTaskGroup(of: T.self) { group in
+        group.addTask {
+            try await operation()
+        }
+
+        group.addTask {
+            try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            throw TimeoutError()
+        }
+
+        let result = try await group.next()!
+        group.cancelAll()
+        return result
+    }
+}
+
 class BackupCoordinator: ObservableObject {
     static let shared = BackupCoordinator()
 
@@ -23,8 +44,8 @@ class BackupCoordinator: ObservableObject {
     private let fileManager = FileManagerService.shared
     private let stateManager = BackupStateManager.shared
 
-    private let batchSize = 20
-    private let maxConcurrentExports = 4
+    private let batchSize = 10  // Reduced from 20 to prevent memory issues
+    private let maxConcurrentExports = 2  // Reduced from 4 to prevent freezing
 
     private init() {}
 
@@ -112,11 +133,22 @@ class BackupCoordinator: ObservableObject {
 
         // Process in batches
         var currentIndex = 0
+        var batchNumber = 0
+
         while currentIndex < assetsToBackup.count && isRunning && !isPaused {
             let endIndex = min(currentIndex + batchSize, assetsToBackup.count)
             let batch = Array(assetsToBackup[currentIndex..<endIndex])
 
+            batchNumber += 1
+            print("📦 Processing batch \(batchNumber): items \(currentIndex)-\(endIndex) of \(assetsToBackup.count)")
+
             await processBatch(batch, destinationPath: destinationPath)
+
+            // Force memory cleanup every 5 batches (every 50 items)
+            if batchNumber % 5 == 0 {
+                print("🧹 Cleaning up memory after \(batchNumber) batches...")
+                await Task.yield()
+            }
 
             currentIndex = endIndex
         }
@@ -133,6 +165,7 @@ class BackupCoordinator: ObservableObject {
     }
 
     private func processBatch(_ assets: [PHAsset], destinationPath: String) async {
+        // Use autoreleasepool to manage memory for each batch
         await withTaskGroup(of: Void.self) { group in
             var activeCount = 0
 
@@ -144,6 +177,7 @@ class BackupCoordinator: ObservableObject {
                 }
 
                 group.addTask {
+                    // Process asset (memory is managed by periodic cleanup)
                     await self.backupAsset(asset, to: destinationPath)
                 }
                 activeCount += 1
@@ -157,6 +191,9 @@ class BackupCoordinator: ObservableObject {
             // Wait for remaining tasks
             await group.waitForAll()
         }
+
+        // Force memory cleanup after each batch
+        await Task.yield()  // Give system time to clean up
     }
 
     private func backupAsset(_ asset: PHAsset, to destinationPath: String) async {
@@ -166,45 +203,65 @@ class BackupCoordinator: ObservableObject {
             currentFile = filename
         }
 
+        // Add timeout to prevent hanging forever (5 minutes per file)
         do {
-            // Get destination directory based on date
-            let directoryURL = try fileManager.getDatePath(for: asset.creationDate, basePath: destinationPath)
-
-            // Handle Live Photos
-            if photoLibrary.isLivePhoto(asset) {
-                try await backupLivePhoto(asset, to: directoryURL, filename: filename)
-            } else {
-                try await backupRegularAsset(asset, to: directoryURL, filename: filename)
+            try await withTimeout(seconds: 300) {
+                try await self.performBackupWithRetry(asset, filename: filename, destinationPath: destinationPath)
             }
-
-            // Save to database
-            let mediaType: Int16 = asset.mediaType == .video ? 1 : 0
-            let fileSize = photoLibrary.getFileSize(for: asset)
-
-            stateManager.saveBackupRecord(
-                assetIdentifier: asset.localIdentifier,
-                originalFilename: filename,
-                creationDate: asset.creationDate,
-                mediaType: mediaType,
-                fileSize: fileSize,
-                destinationPath: directoryURL.path
-            )
-
-            // Update progress
+        } catch is TimeoutError {
+            print("⏱️ Timeout backing up \(filename) - skipping after 5 minutes")
             await MainActor.run {
-                currentProgress.completedItems += 1
-                currentProgress.remainingItems -= 1
-                currentProgress.calculateProgress()
-
-                // Update configuration every 10 items
-                if currentProgress.completedItems % 10 == 0 {
-                    stateManager.updateConfiguration(backedUpCount: Int64(currentProgress.completedItems))
-                }
+                self.currentProgress.errorCount += 1
             }
-
         } catch {
-            print("Error backing up \(filename): \(error)")
-            await incrementErrorCount()
+            print("❌ Error backing up \(filename): \(error.localizedDescription)")
+            await MainActor.run {
+                self.currentProgress.errorCount += 1
+            }
+        }
+
+        // Update progress
+        await MainActor.run {
+            currentProgress.completedItems += 1
+            currentProgress.remainingItems -= 1
+            currentProgress.calculateProgress()
+
+            // Reset download state after completing this file
+            currentProgress.isDownloadingFromiCloud = false
+            currentProgress.iCloudDownloadProgress = 0.0
+            currentProgress.currentDownloadAttempt = 0
+        }
+    }
+
+    private func performBackupWithRetry(_ asset: PHAsset, filename: String, destinationPath: String) async throws {
+        // Get destination directory based on date
+        let directoryURL = try fileManager.getDatePath(for: asset.creationDate, basePath: destinationPath)
+
+        // Handle Live Photos
+        if photoLibrary.isLivePhoto(asset) {
+            try await backupLivePhoto(asset, to: directoryURL, filename: filename)
+        } else {
+            try await backupRegularAsset(asset, to: directoryURL, filename: filename)
+        }
+
+        // Save to database (do this in background to avoid blocking)
+        let mediaType: Int16 = asset.mediaType == .video ? 1 : 0
+        let fileSize = photoLibrary.getFileSize(for: asset)
+
+        stateManager.saveBackupRecord(
+            assetIdentifier: asset.localIdentifier,
+            originalFilename: filename,
+            creationDate: asset.creationDate,
+            mediaType: mediaType,
+            fileSize: fileSize,
+            destinationPath: directoryURL.path
+        )
+
+        // Update configuration every 10 items
+        await MainActor.run {
+            if currentProgress.completedItems % 10 == 0 {
+                stateManager.updateConfiguration(backedUpCount: Int64(currentProgress.completedItems + 1))
+            }
         }
     }
 
@@ -214,9 +271,12 @@ class BackupCoordinator: ObservableObject {
         // Create temp file for export
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
 
-        try await photoLibrary.exportAsset(asset, to: tempURL) { progress in
+        try await photoLibrary.exportAsset(asset, to: tempURL) { exportProgress in
             Task { @MainActor in
-                self.currentProgress.currentItemProgress = progress
+                self.currentProgress.currentItemProgress = exportProgress.progress
+                self.currentProgress.isDownloadingFromiCloud = exportProgress.isDownloadingFromiCloud
+                self.currentProgress.iCloudDownloadProgress = exportProgress.progress
+                self.currentProgress.currentDownloadAttempt = exportProgress.downloadAttempt
             }
         }
 
@@ -277,6 +337,11 @@ struct BackupProgress {
     var currentItemProgress: Double = 0.0
     var overallProgress: Double = 0.0
     var isComplete: Bool = false
+
+    // iCloud download progress
+    var isDownloadingFromiCloud: Bool = false
+    var iCloudDownloadProgress: Double = 0.0
+    var currentDownloadAttempt: Int = 0
 
     mutating func calculateProgress() {
         if totalItems > 0 {

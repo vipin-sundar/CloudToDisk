@@ -153,6 +153,20 @@ class BackupStateManager: ObservableObject {
         }
     }
 
+    func resetBackupHistory() {
+        // Delete all backup records
+        deleteAllBackupRecords()
+
+        // Reset configuration counters
+        let config = getOrCreateConfiguration()
+        config.backedUpCount = 0
+        config.lastBackupDate = nil
+
+        saveContext()
+
+        print("✅ Backup history cleared - ready to start fresh")
+    }
+
     // Helper
 
     private func saveContext() {

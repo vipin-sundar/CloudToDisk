@@ -13,6 +13,7 @@ struct SettingsView: View {
     @StateObject private var permissionService = PermissionService.shared
     @State private var destinationPath: String = ""
     @State private var showingFolderPicker = false
+    @State private var showingResetConfirmation = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -30,6 +31,9 @@ struct SettingsView: View {
 
                     // Permissions Section
                     permissionsSection
+
+                    // Advanced Section
+                    advancedSection
 
                     // About Section
                     aboutSection
@@ -248,6 +252,78 @@ struct SettingsView: View {
 
     // MARK: - About Section
 
+    private var advancedSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Section Header
+            HStack(spacing: 8) {
+                Image(systemName: "gearshape.2.fill")
+                    .foregroundColor(Color(hex: "FF9500"))
+                    .font(.system(size: 14, weight: .medium))
+                Text("Advanced")
+                    .font(.system(size: 15, weight: .semibold))
+            }
+
+            VStack(spacing: 12) {
+                // Reset Backup History Button
+                Button(action: {
+                    showingResetConfirmation = true
+                }) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "arrow.clockwise.circle.fill")
+                            .foregroundColor(Color(hex: "FF3B30"))
+                            .font(.system(size: 16))
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Clear Backup History")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.primary)
+
+                            Text("Remove all backup records and start fresh")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                            .font(.system(size: 11, weight: .semibold))
+                    }
+                    .padding(12)
+                    .background(Color(NSColor.controlBackgroundColor))
+                    .cornerRadius(6)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(PlainButtonStyle())
+
+                // Info text
+                Text("⚠️ This will clear all backup records. The app will re-backup all photos on the next run. Your backed-up files on the external drive will NOT be deleted.")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 4)
+            }
+            .padding(16)
+            .background(Color(hex: "FF3B30").opacity(0.05))
+            .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color(hex: "FF3B30").opacity(0.2), lineWidth: 1)
+            )
+        }
+        .alert("Clear Backup History?", isPresented: $showingResetConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Clear History", role: .destructive) {
+                resetBackupHistory()
+            }
+        } message: {
+            Text("This will remove all backup records from the database. You'll be able to re-backup all photos from scratch.\n\nYour files on the external drive will NOT be deleted.")
+        }
+    }
+
     private var aboutSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Section Header
@@ -330,6 +406,16 @@ struct SettingsView: View {
     private func loadSettings() {
         let config = stateManager.getOrCreateConfiguration()
         destinationPath = config.destinationPath ?? ""
+    }
+
+    private func resetBackupHistory() {
+        stateManager.resetBackupHistory()
+
+        // Show success feedback
+        print("✅ Backup history cleared successfully")
+
+        // Optionally reload settings
+        loadSettings()
     }
 
     private func selectFolder() {
