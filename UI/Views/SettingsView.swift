@@ -43,7 +43,7 @@ struct SettingsView: View {
             Divider()
             footerSection
         }
-        .frame(width: 580, height: 620)
+        .frame(width: 500, height: 620)
         .background(Color(NSColor.windowBackgroundColor))
         .onAppear {
             loadSettings()

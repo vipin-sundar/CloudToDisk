@@ -12,10 +12,10 @@ struct PermissionView: View {
     @State private var isRequesting = false
 
     var body: some View {
-        VStack(spacing: 28) {
+        VStack(spacing: 20) {
             // Icon
             ZStack {
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 10)
                     .fill(
                         LinearGradient(
                             colors: [Color(hex: "0066FF").opacity(0.15), Color(hex: "00A3FF").opacity(0.08)],
@@ -23,25 +23,25 @@ struct PermissionView: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 88, height: 88)
+                    .frame(width: 70, height: 70)
 
                 Image(systemName: "photo.on.rectangle.angled")
-                    .font(.system(size: 42, weight: .medium))
+                    .font(.system(size: 34, weight: .medium))
                     .foregroundColor(Color(hex: "0066FF"))
             }
 
             // Title
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 Text("Photos Access Required")
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.system(size: 18, weight: .bold))
 
                 Text("Let's get started by granting access")
-                    .font(.system(size: 14))
+                    .font(.system(size: 13))
                     .foregroundColor(.secondary)
             }
 
             // Description
-            VStack(spacing: 12) {
+            VStack(spacing: 10) {
                 PermissionFeature(
                     icon: "lock.shield.fill",
                     title: "Privacy First",
@@ -60,7 +60,7 @@ struct PermissionView: View {
                     description: "Automatically downloads photos from iCloud as needed."
                 )
             }
-            .padding(16)
+            .padding(14)
             .background(Color(NSColor.controlBackgroundColor))
             .cornerRadius(8)
 
@@ -69,21 +69,21 @@ struct PermissionView: View {
                 Button(action: {
                     requestPermission()
                 }) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 6) {
                         if isRequesting {
                             ProgressView()
-                                .scaleEffect(0.8)
-                                .frame(width: 16, height: 16)
+                                .scaleEffect(0.7)
+                                .frame(width: 14, height: 14)
                                 .tint(.white)
                         } else {
                             Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 14, weight: .medium))
+                                .font(.system(size: 13, weight: .medium))
                         }
                         Text(isRequesting ? "Requesting..." : "Grant Photos Access")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 13, weight: .semibold))
                     }
                     .frame(maxWidth: .infinity)
-                    .frame(height: 44)
+                    .frame(height: 42)
                     .background(Color(hex: "0066FF"))
                     .foregroundColor(.white)
                     .cornerRadius(8)
@@ -92,15 +92,15 @@ struct PermissionView: View {
                 .disabled(isRequesting)
                 .opacity(isRequesting ? 0.7 : 1.0)
             } else if permissionService.authorizationStatus == .denied || permissionService.authorizationStatus == .restricted {
-                VStack(spacing: 12) {
-                    HStack(spacing: 8) {
+                VStack(spacing: 10) {
+                    HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(Color(hex: "FF9500"))
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.system(size: 12, weight: .medium))
                         Text("Access was denied")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.system(size: 12, weight: .medium))
                     }
-                    .padding(14)
+                    .padding(12)
                     .frame(maxWidth: .infinity)
                     .background(Color(hex: "FF9500").opacity(0.08))
                     .cornerRadius(6)
@@ -108,28 +108,29 @@ struct PermissionView: View {
                     Button(action: {
                         permissionService.openSystemSettings()
                     }) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: 6) {
                             Image(systemName: "gearshape.fill")
-                                .font(.system(size: 14, weight: .medium))
+                                .font(.system(size: 13, weight: .medium))
                             Text("Open System Settings")
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(.system(size: 13, weight: .semibold))
                         }
                         .frame(maxWidth: .infinity)
-                        .frame(height: 44)
+                        .frame(height: 42)
                         .background(Color(hex: "FF9500"))
                         .foregroundColor(.white)
                         .cornerRadius(8)
                     }
                     .buttonStyle(.plain)
 
-                    Text("Go to System Settings > Privacy & Security > Photos and enable CloudToDisk")
-                        .font(.system(size: 12))
+                    Text("Go to System Settings > Privacy & Security > Photos")
+                        .font(.system(size: 11))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
+                        .lineLimit(2)
                 }
             }
         }
-        .padding(20)
+        .padding(16)
         .frame(maxWidth: 420)
     }
 
@@ -154,18 +155,18 @@ struct PermissionFeature: View {
     let description: String
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 14, weight: .medium))
                 .foregroundColor(Color(hex: "0066FF"))
-                .frame(width: 28)
+                .frame(width: 24)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
 
                 Text(description)
-                    .font(.system(size: 12))
+                    .font(.system(size: 11))
                     .foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }

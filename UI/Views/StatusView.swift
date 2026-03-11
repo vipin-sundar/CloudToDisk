@@ -19,32 +19,30 @@ struct StatusView: View {
 
             Divider()
 
-            // Main Content
-            ScrollView {
-                VStack(spacing: 24) {
-                    if !permissionService.isAuthorized {
-                        PermissionView()
-                            .padding()
-                    } else {
-                        // Stats Cards
-                        statsCardsSection
-                            .padding(.horizontal, 24)
-                            .padding(.top, 24)
+            // Main Content (No Scroll)
+            VStack(spacing: 16) {
+                if !permissionService.isAuthorized {
+                    PermissionView()
+                        .padding()
+                } else {
+                    // Stats Cards
+                    statsCardsSection
+                        .padding(.horizontal, 20)
+                        .padding(.top, 16)
 
-                        // Progress Section
-                        if coordinator.isRunning || coordinator.currentProgress.completedItems > 0 {
-                            progressSection
-                                .padding(.horizontal, 24)
-                        }
-
-                        // Error Message
-                        if let error = coordinator.errorMessage {
-                            errorSection(error)
-                                .padding(.horizontal, 24)
-                        }
-
-                        Spacer(minLength: 20)
+                    // Progress Section
+                    if coordinator.isRunning || coordinator.currentProgress.completedItems > 0 {
+                        progressSection
+                            .padding(.horizontal, 20)
                     }
+
+                    // Error Message
+                    if let error = coordinator.errorMessage {
+                        errorSection(error)
+                            .padding(.horizontal, 20)
+                    }
+
+                    Spacer(minLength: 0)
                 }
             }
 
@@ -158,7 +156,7 @@ struct StatusView: View {
     // MARK: - Stats Cards Section
 
     private var statsCardsSection: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             // Total Photos Card
             StatCard(
                 title: "Total Photos",
@@ -188,82 +186,82 @@ struct StatusView: View {
     // MARK: - Progress Section
 
     private var progressSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             // Progress Header Card
             HStack {
                 Text("Backup Progress")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                 Spacer()
                 Text("\(coordinator.currentProgress.percentComplete)%")
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.system(size: 20, weight: .bold))
                     .foregroundColor(Color(hex: "0066FF"))
             }
-            .padding(16)
+            .padding(14)
             .background(Color(NSColor.controlBackgroundColor))
             .cornerRadius(8)
 
             // Progress Bar Card
-            VStack(spacing: 12) {
+            VStack(spacing: 10) {
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
                         // Background
                         RoundedRectangle(cornerRadius: 4)
                             .fill(Color.gray.opacity(0.12))
-                            .frame(height: 8)
+                            .frame(height: 6)
 
                         // Progress
                         RoundedRectangle(cornerRadius: 4)
                             .fill(Color(hex: "0066FF"))
                             .frame(
                                 width: geometry.size.width * coordinator.currentProgress.overallProgress,
-                                height: 8
+                                height: 6
                             )
                             .animation(.easeInOut(duration: 0.3), value: coordinator.currentProgress.overallProgress)
                     }
                 }
-                .frame(height: 8)
+                .frame(height: 6)
             }
-            .padding(16)
+            .padding(12)
             .background(Color(NSColor.controlBackgroundColor))
             .cornerRadius(8)
 
             // Current File Card
             if !coordinator.currentFile.isEmpty {
-                HStack(spacing: 10) {
+                HStack(spacing: 8) {
                     Image(systemName: "arrow.down.circle.fill")
                         .foregroundColor(Color(hex: "0066FF"))
-                        .font(.system(size: 16))
+                        .font(.system(size: 14))
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 3) {
                         Text("Current File")
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.system(size: 10, weight: .medium))
                             .foregroundColor(.secondary)
 
                         Text(coordinator.currentFile)
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.system(size: 11, weight: .medium))
                             .lineLimit(1)
                             .truncationMode(.middle)
                     }
 
                     Spacer()
                 }
-                .padding(16)
+                .padding(12)
                 .background(Color(NSColor.controlBackgroundColor))
                 .cornerRadius(8)
             }
 
             // Stats Card
-            HStack(spacing: 20) {
-                HStack(spacing: 8) {
+            HStack(spacing: 16) {
+                HStack(spacing: 6) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(Color(hex: "34C759"))
-                        .font(.system(size: 16))
+                        .font(.system(size: 14))
 
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 1) {
                         Text("\(coordinator.currentProgress.completedItems)")
-                            .font(.system(size: 18, weight: .bold))
+                            .font(.system(size: 16, weight: .bold))
                         Text("completed")
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.system(size: 10, weight: .medium))
                             .foregroundColor(.secondary)
                     }
                 }
@@ -271,16 +269,16 @@ struct StatusView: View {
                 if coordinator.currentProgress.errorCount > 0 {
                     Spacer()
 
-                    HStack(spacing: 8) {
+                    HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(Color(hex: "FF9500"))
-                            .font(.system(size: 16))
+                            .font(.system(size: 14))
 
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: 1) {
                             Text("\(coordinator.currentProgress.errorCount)")
-                                .font(.system(size: 18, weight: .bold))
+                                .font(.system(size: 16, weight: .bold))
                             Text("errors")
-                                .font(.system(size: 11, weight: .medium))
+                                .font(.system(size: 10, weight: .medium))
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -288,7 +286,7 @@ struct StatusView: View {
 
                 Spacer()
             }
-            .padding(16)
+            .padding(12)
             .background(Color(NSColor.controlBackgroundColor))
             .cornerRadius(8)
         }
@@ -390,7 +388,9 @@ struct StatusView: View {
                 }
             }
         }
-        .padding(20)
+        .padding(.horizontal, 20)
+        .padding(.top, 20)
+        .padding(.bottom, 32)
         .background(Color(NSColor.controlBackgroundColor))
         .sheet(isPresented: $showSettings) {
             SettingsView()
@@ -413,33 +413,37 @@ struct StatCard: View {
                 ZStack {
                     Circle()
                         .fill(color.opacity(0.12))
-                        .frame(width: 44, height: 44)
+                        .frame(width: 40, height: 40)
 
                     Image(systemName: icon)
-                        .font(.system(size: 20, weight: .medium))
+                        .font(.system(size: 18, weight: .medium))
                         .foregroundColor(color)
                 }
                 Spacer()
             }
-            .padding(.bottom, 16)
+            .padding(.bottom, 12)
 
             // Value and Title
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(value)
-                    .font(.system(size: 32, weight: .bold))
+                    .font(.system(size: 28, weight: .bold))
                     .foregroundColor(.primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 Text(title)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .padding(18)
+        .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(NSColor.controlBackgroundColor))
         .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(color.opacity(0.2), lineWidth: 1)
+        )
     }
 }
 
